@@ -6,12 +6,21 @@ import { io, emitNewMessage } from "../lib/socket.js";
 export const getUsersForSidebar = async (req, res) =>{
     try {
         const loggedInUserId = req.user._id;
+        console.log('Fetching users for sidebar, logged in user:', loggedInUserId);
+        
+        if (!loggedInUserId) {
+            return res.status(400).json({ error: "User ID is required" });
+        }
+        
         const filteredUsers = await User.find({
             _id: { $ne: loggedInUserId },
-        }).select("-password")
-        res.status(200).json(filteredUsers)
+        }).select("-password");
+        
+        console.log(`Found ${filteredUsers.length} users for sidebar`);
+        res.status(200).json(filteredUsers);
     } catch (error) {
-        res.status(500).json({ error: "Failed to fetch users" })
+        console.error("Error fetching users for sidebar:", error);
+        res.status(500).json({ error: "Failed to fetch users", message: error.message });
     }
 }
 

@@ -26,7 +26,17 @@ console.log('CORS config:', corsOptions);
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Configure cookie parser with appropriate options for production
+const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+};
+
+console.log('Cookie options:', cookieOptions);
 app.use(cookieParser());
+
 app.use('/api/auth', authRoutes)
 app.use('/api/messages', messageRoutes)
 

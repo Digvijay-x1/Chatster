@@ -15,12 +15,27 @@ export const useChatStore = create(
             getUsers: async () => {
                 set({ isUsersLoading: true });
                 try {
+                    console.log("Fetching users...");
                     const res = await axiosInstance.get("/messages/users");
+                    console.log("Users fetched successfully:", res.data.length);
                     set({ users: res.data, isUsersLoading: false });
                 } catch (error) {
                     console.error("Error fetching users:", error);
-                    toast.error(error?.response?.data?.message || "Failed to fetch users");
-                    set({ isUsersLoading: false });
+                    
+                    // Check if it's a network error
+                    if (!error.response) {
+                        toast.error("Network error. Please check your connection.");
+                    } else {
+                        // Server responded with an error
+                        const errorMsg = error?.response?.data?.message || error?.response?.data?.error || "Failed to fetch users";
+                        toast.error(errorMsg);
+                    }
+                    
+                    // Keep the existing users if we have them
+                    set(state => ({ 
+                        isUsersLoading: false,
+                        users: state.users.length ? state.users : []
+                    }));
                 }
             },
 

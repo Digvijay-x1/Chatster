@@ -11,7 +11,7 @@ const HomePage = () => {
     // Load users when component mounts
     getUsers();
     
-    // Set up interval to refresh users
+    // Set up interval to refresh users only if it is newly logged in or signed up
     const interval = setInterval(() => {
       getUsers();
     }, 60000); // Refresh every minute

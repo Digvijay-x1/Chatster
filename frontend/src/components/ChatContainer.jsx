@@ -39,7 +39,7 @@ const ChatContainer = () => {
   );
   
   return (
-    <div className="flex-1 flex flex-col overflow-auto">
+    <div className="h-full flex-1 flex flex-col overflow-auto">
       <ChatHeader/>
       <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (

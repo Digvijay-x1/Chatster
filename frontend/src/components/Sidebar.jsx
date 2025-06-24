@@ -14,11 +14,8 @@ const Sidebar = () => {
     getUsers();
 
     // Refresh users list every 30 seconds
-    const interval = setInterval(() => {
-      getUsers();
-    }, 30000);
 
-    return () => clearInterval(interval);
+    // return () => clearInterval(interval);
   }, [getUsers]);
 
   const handleUserSelect = (user) => {
@@ -48,7 +45,7 @@ const Sidebar = () => {
             />
             <span className="text-sm">Show online only</span>
           </label>
-          <span className="text-xs text-zinc-500">({onlineUsers.length - 1} online)</span>
+          <span className="text-xs text-zinc-500">({Math.max(0, onlineUsers.length - 1)} online)</span>
         </div>
 
       </div>

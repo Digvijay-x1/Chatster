@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 import { Users } from "lucide-react";
@@ -8,10 +8,21 @@ const Sidebar = () => {
   const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading } = useChatStore();
   const { onlineUsers } = useAuthStore();
 
-
   useEffect(() => {
+    // Initial load
     getUsers();
+
+    // Refresh users list every 30 seconds
+    const interval = setInterval(() => {
+      getUsers();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, [getUsers]);
+
+  const handleUserSelect = (user) => {
+    setSelectedUser(user);
+  };
 
   if (isUsersLoading) return <SidebarSkeleton />;
 
@@ -30,7 +41,7 @@ const Sidebar = () => {
         {users.map((user) => (
           <button
             key={user._id}
-            onClick={() => setSelectedUser(user)}
+            onClick={() => handleUserSelect(user)}
             className={`
               w-full p-3 flex items-center gap-3
               hover:bg-base-300 transition-colors

@@ -2,7 +2,9 @@ import { create } from 'zustand'
 import { axiosInstance } from '../lib/axios';
 import toast from 'react-hot-toast';
 import { io } from 'socket.io-client';
-const BASE_URL = import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:3333/api';
+// In production, connect to the root path of the server, not /api
+const BASE_URL = import.meta.env.MODE === 'production' ? window.location.origin : 'http://localhost:3333';
+
 export const useAuthStore = create((set , get) => ({
     authUser: null,
     isSigningUp: false,
@@ -85,27 +87,43 @@ export const useAuthStore = create((set , get) => ({
         if(!authUser|| get().socket?.connected) return;
         
         console.log("Connecting to socket at:", BASE_URL);
-        const socket = io(BASE_URL, {
-            query: {
-                userId: authUser._id,
-            },
-            withCredentials: true
-        });
-        socket.connect();
-        set({socket});
-
-        socket.on('connect', () => {
-            console.log('Socket connected successfully');
-        });
-        
-        socket.on('connect_error', (error) => {
-            console.error('Socket connection error:', error);
-        });
-
-        socket.on('getOnlineUsers' , (userIds)=>{
-            console.log('Received online users:', userIds);
-            set({onlineUsers: userIds});
-        });
+        try {
+            const socket = io(BASE_URL, {
+                query: {
+                    userId: authUser._id,
+                },
+                withCredentials: true,
+                reconnectionAttempts: 5,
+                reconnectionDelay: 1000,
+                timeout: 20000
+            });
+            
+            socket.on('connect', () => {
+                console.log('Socket connected successfully with ID:', socket.id);
+            });
+            
+            socket.on('connect_error', (error) => {
+                console.error('Socket connection error:', error);
+                toast.error('Connection issue. Online status may not be accurate.');
+            });
+            
+            socket.on('disconnect', (reason) => {
+                console.log('Socket disconnected:', reason);
+            });
+            
+            socket.on('reconnect_attempt', (attemptNumber) => {
+                console.log('Socket reconnection attempt:', attemptNumber);
+            });
+            
+            socket.on('getOnlineUsers', (userIds)=>{
+                console.log('Received online users:', userIds);
+                set({onlineUsers: userIds});
+            });
+            
+            set({socket});
+        } catch (error) {
+            console.error('Error initializing socket:', error);
+        }
     },
     disconnectSocket: ()=>{
         if(get().socket?.connected){

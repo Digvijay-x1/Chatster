@@ -6,18 +6,24 @@ const app = express();
 
 const server = http.createServer(app);
 
-console.log("Socket.io CORS config:", process.env.NODE_ENV === 'production' ? "All origins (true)" : "http://localhost:5173");
+// Define CORS options
+const corsOptions = {
+    origin: process.env.NODE_ENV === 'production' ? true : ['http://localhost:5173'],
+    methods: ["GET", "POST"],
+    credentials: true
+};
 
-const io = new Server(server , {
-    cors: {
-        origin: process.env.NODE_ENV === 'production' ? true : ['http://localhost:5173'],
-        credentials: true
-    }
+console.log("Socket.io CORS config:", corsOptions);
+
+const io = new Server(server, {
+    cors: corsOptions,
+    path: '/socket.io'  // Explicitly set the path
 });
+
 // used to store online users
 const userSocketMap = {}; // {userId: socketId}
 
-io.on('connection' , (socket)=>{
+io.on('connection', (socket) => {
     console.log('a user connected', socket.id);
     console.log('connection query params:', socket.handshake.query);
 
@@ -25,7 +31,7 @@ io.on('connection' , (socket)=>{
     if(userId){
         userSocketMap[userId] = socket.id;
         // Emit updated online users list immediately after this user connects
-        io.emit('getOnlineUsers' , Object.keys(userSocketMap));
+        io.emit('getOnlineUsers', Object.keys(userSocketMap));
         console.log('Current online users:', Object.keys(userSocketMap));
     } else {
         console.log('Warning: User connected without userId in query params');
@@ -44,17 +50,17 @@ io.on('connection' , (socket)=>{
         }
     });
 
-    socket.on('disconnect' , ()=>{
+    socket.on('disconnect', () => {
         console.log('a user disconnected', socket.id);
         delete userSocketMap[userId];
-        io.emit('getOnlineUsers' , Object.keys(userSocketMap));
+        io.emit('getOnlineUsers', Object.keys(userSocketMap));
         console.log('Updated online users after disconnect:', Object.keys(userSocketMap));
     });
 
     socket.on('error', (error) => {
         console.error('Socket error:', error);
     });
-})
+});
 
 // Function to emit a new message to a specific user
 const emitNewMessage = (message) => {
@@ -66,4 +72,4 @@ const emitNewMessage = (message) => {
     return false;
 }
 
-export {io , app , server, emitNewMessage};
+export {io, app, server, emitNewMessage};

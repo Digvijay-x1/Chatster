@@ -24,7 +24,14 @@ io.on('connection' , (socket)=>{
         io.emit('getOnlineUsers' , Object.keys(userSocketMap));
     }
 
-    // io.emit() is used to send a message to all connected clients
+    // Handle new message event
+    socket.on('sendMessage', (message) => {
+        const receiverSocketId = userSocketMap[message.receiverId];
+        if (receiverSocketId) {
+            // Send message to the specific receiver
+            io.to(receiverSocketId).emit('newMessage', message);
+        }
+    });
 
     socket.on('disconnect' , ()=>{
         console.log('a user disconnected',socket.id);
@@ -33,4 +40,12 @@ io.on('connection' , (socket)=>{
     })
 })
 
-export {io , app , server};
+// Function to emit a new message to a specific user
+const emitNewMessage = (message) => {
+    const receiverSocketId = userSocketMap[message.receiverId];
+    if (receiverSocketId) {
+        io.to(receiverSocketId).emit('newMessage', message);
+    }
+}
+
+export {io , app , server, emitNewMessage};

@@ -64,6 +64,19 @@ export const useChatStore = create(
                     get().getMessages(selectedUser._id);
                 }
             },
+
+            addNewMessage: (message) => {
+                const { messages, selectedUser } = get();
+                const authUserId = localStorage.getItem('authUserId');
+                
+                // Check if this message belongs to the current chat
+                if (selectedUser && 
+                    ((message.senderId === selectedUser._id && message.receiverId === authUserId) || 
+                     (message.receiverId === selectedUser._id && message.senderId === authUserId))) {
+                    console.log("Adding new message to chat:", message);
+                    set({ messages: [...messages, message] });
+                }
+            },
         }),
         {
             name: "chat-storage",

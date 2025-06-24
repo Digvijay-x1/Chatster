@@ -1,6 +1,7 @@
 import User from "../models/user.model.js";
 import Message from "../models/message.model.js";
 import cloudinary from "../lib/cloudinary.js";
+import { io, emitNewMessage } from "../lib/socket.js";
 
 export const getUsersForSidebar = async (req, res) =>{
     try {
@@ -57,6 +58,12 @@ export const sendMessage = async (req, res) =>{
             text,
             image: imageUrl,
         });
+
+        // Convert Mongoose document to plain object
+        const messageToSend = newMessage.toObject();
+
+        // Emit socket event for real-time messaging
+        emitNewMessage(messageToSend);
 
         res.status(201).json(newMessage);
     } catch (error) {
